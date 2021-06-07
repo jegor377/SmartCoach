@@ -12,16 +12,9 @@ class Headline extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(10.0, 15.0, 0, 20.0),
       child: Text(
         text_content,
-        style: HeadlineStyle(),
+        style: TextStyle(fontSize: 20.0),
       ),
     );
   }
 
-}
-
-class HeadlineStyle extends TextStyle {
-  HeadlineStyle({Color color = Colors.white}) : super(
-    color: color,
-    fontSize: 20.0,
-  );
 }

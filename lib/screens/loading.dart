@@ -5,14 +5,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:smart_coach/data/training.dart';
+import 'package:smart_coach/models/training.dart';
 
-class LoadingTrainingPlan extends StatefulWidget {
+class LoadingTrainingPlanScreen extends StatefulWidget {
+  static const routeName = '/loading';
+
+  const LoadingTrainingPlanScreen({Key? key}) : super(key: key);
+
   @override
-  State<StatefulWidget> createState() => _LoadingTrainingPlan();
+  State<StatefulWidget> createState() => _LoadingTrainingPlanScreenState();
 }
 
-class _LoadingTrainingPlan extends State<LoadingTrainingPlan> with TickerProviderStateMixin {
+class _LoadingTrainingPlanScreenState extends State<LoadingTrainingPlanScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     loadTrainingPlans();
