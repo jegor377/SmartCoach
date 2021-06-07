@@ -29,7 +29,7 @@ class TrainingPlan {
   bool repeatsOnFriday = false;
   bool repeatsOnSaturday = false;
   bool repeatsOnSunday = false;
-  List<TrainingExercise> exercises = [];
+  List<dynamic> exercises = [];
 
   TrainingPlan({
     required this.name,
@@ -45,17 +45,43 @@ class TrainingPlan {
 
   TrainingPlan.empty();
 
+  String get repeatingDays {
+    List<String> days = [];
+    if(repeatsOnMonday) days.add('Mon');
+    if(repeatsOnTuesday) days.add('Tue');
+    if(repeatsOnWednesday) days.add('Wed');
+    if(repeatsOnThursday) days.add('Thu');
+    if(repeatsOnFriday) days.add('Fri');
+    if(repeatsOnSaturday) days.add('Sat');
+    if(repeatsOnSunday) days.add('Sun');
+    String result = days.join(', ');
+    return result.isEmpty ? 'Never' : result;
+  }
+
+  RepeatingDaysScreenArguments get repeatingDaysScreenArgs => RepeatingDaysScreenArguments(
+      repeatsOnMonday: repeatsOnMonday,
+      repeatsOnTuesday: repeatsOnTuesday,
+      repeatsOnWednesday: repeatsOnWednesday,
+      repeatsOnThursday: repeatsOnThursday,
+      repeatsOnFriday: repeatsOnFriday,
+      repeatsOnSaturday: repeatsOnSaturday,
+      repeatsOnSunday: repeatsOnSunday
+  );
+
+  set repeatingDaysScreenArgs(RepeatingDaysScreenArguments days) {
+    repeatsOnMonday = days.repeatsOnMonday;
+    repeatsOnTuesday = days.repeatsOnTuesday;
+    repeatsOnWednesday = days.repeatsOnWednesday;
+    repeatsOnThursday = days.repeatsOnThursday;
+    repeatsOnFriday = days.repeatsOnFriday;
+    repeatsOnSaturday = days.repeatsOnSaturday;
+    repeatsOnSunday = days.repeatsOnSunday;
+  }
+
   factory TrainingPlan.fromJson(Map plan) {
     TrainingPlan result = TrainingPlan.empty();
     for(Map exercise in plan['exercises']) {
-      switch(exercise['type']) {
-        case 0:
-          result.exercises.add(TrainingExercise.fromJson(exercise));
-          break;
-        case 1:
-          result.exercises.add(TimedTrainingExercise.fromJson(exercise));
-          break;
-      }
+      result.exercises.add(TrainingExercise.fromJson(exercise));
     }
     result.name = plan['name'];
     for(int day in plan['repeating_days']) {
@@ -87,25 +113,63 @@ class TrainingPlan {
   }
 }
 
-class TrainingExercise {
-  String description;
+class RepeatingDaysScreenArguments {
+  bool repeatsOnMonday = false;
+  bool repeatsOnTuesday = false;
+  bool repeatsOnWednesday = false;
+  bool repeatsOnThursday = false;
+  bool repeatsOnFriday = false;
+  bool repeatsOnSaturday = false;
+  bool repeatsOnSunday = false;
 
-  TrainingExercise({this.description = ''});
+  RepeatingDaysScreenArguments({
+    required this.repeatsOnMonday,
+    required this.repeatsOnTuesday,
+    required this.repeatsOnWednesday,
+    required this.repeatsOnThursday,
+    required this.repeatsOnFriday,
+    required this.repeatsOnSaturday,
+    required this.repeatsOnSunday,
+  });
 
-  factory TrainingExercise.fromJson(Map exercise) {
-    return TrainingExercise(description: exercise['description']);
-  }
+  RepeatingDaysScreenArguments.empty();
 }
 
-class TimedTrainingExercise extends TrainingExercise {
-  int time;
+enum TrainingExerciseType {
+  NORMAL,
+  TIMED,
+}
 
-  TimedTrainingExercise({String description = '', this.time = 0}) : super(description: description);
+class TrainingExercise {
+  TrainingExerciseType type = TrainingExerciseType.NORMAL;
+  String description = '';
+  int time = 0;
 
-  factory TimedTrainingExercise.fromJson(Map exercise) {
-    return TimedTrainingExercise(
+  TrainingExercise({
+    required this.type,
+    required this.description,
+    this.time = 0
+  });
+  TrainingExercise.empty();
+
+  String get timeLabel {
+    int hours = time ~/ 3600;
+    int minutes = (time % 3600) ~/ 60;
+    int seconds = time % 60;
+    String result = '';
+
+    if(hours > 0) result += '${hours}h ';
+    if(minutes > 0) result += '${minutes}m ';
+    result += '${seconds}s';
+
+    return result;
+  }
+
+  factory TrainingExercise.fromJson(Map exercise) {
+    return TrainingExercise(
+      type: TrainingExerciseType.values[exercise['type']],
       description: exercise['description'],
-      time: exercise['time'],
+      time: exercise.containsKey('time') ? exercise['time'] : 0
     );
   }
 }

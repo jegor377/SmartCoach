@@ -15,40 +15,103 @@ class HomePageScreen extends StatefulWidget {
 }
 
 class _HomePageScreenState extends State<HomePageScreen> {
-  int _trained_time = 65;
-  List<TrainingPlan> plans = [
+  int _trainedTime = 65;
+  List<TrainingPlan> _plans = [
     TrainingPlan(
-      name: "Normalny plan",
-      repeatsOnMonday: true,
-      repeatsOnTuesday: true,
-      repeatsOnFriday: true,
-      exercises: [
-        TrainingExercise(description: "20 przysiadow"),
-        TrainingExercise(description: "10 pompek"),
-        TimedTrainingExercise(description: "30 sekund planka", time: 30),
-      ],
+        name: "Normalny plan",
+        repeatsOnFriday: true,
+        repeatsOnWednesday: true,
+        repeatsOnMonday: true,
+        exercises: [
+          TrainingExercise(
+            type: TrainingExerciseType.NORMAL,
+            description: "20 przysiadow"
+          ),
+          TrainingExercise(
+            type: TrainingExerciseType.NORMAL,
+            description: "10 pompek"
+          ),
+          TrainingExercise(
+            type: TrainingExerciseType.TIMED,
+            description: "30s planka",
+            time: 30
+          ),
+        ]
+    ),
+    TrainingPlan(
+        name: "Lol plan",
+        repeatsOnFriday: true,
+        repeatsOnWednesday: true,
+        repeatsOnMonday: true,
+        exercises: [
+          TrainingExercise(
+              type: TrainingExerciseType.NORMAL,
+              description: "20 przysiadow"
+          ),
+          TrainingExercise(
+              type: TrainingExerciseType.NORMAL,
+              description: "10 pompek"
+          ),
+          TrainingExercise(
+              type: TrainingExerciseType.TIMED,
+              description: "30s planka",
+              time: 30
+          ),
+        ]
+    ),
+    TrainingPlan(
+        name: "Nienormalny plan",
+        repeatsOnFriday: true,
+        repeatsOnWednesday: true,
+        repeatsOnMonday: true,
+        exercises: [
+          TrainingExercise(
+              type: TrainingExerciseType.NORMAL,
+              description: "20 przysiadow"
+          ),
+          TrainingExercise(
+              type: TrainingExerciseType.NORMAL,
+              description: "10 pompek"
+          ),
+          TrainingExercise(
+              type: TrainingExerciseType.TIMED,
+              description: "30s planka",
+              time: 30
+          ),
+        ]
     )
   ];
 
   void _newTrainingPlan() {
-    // setState(() {
-    //   _trained_time++;
-    // });
-    Navigator.push(
+    Navigator.pushNamed(
       context,
-      MaterialPageRoute(builder: (context) => CreatingTrainingPlanScreen()),
+      CreatingTrainingPlanScreen.routeName,
     );
   }
 
   String _getTimeSpentWorkingLabel() {
-    int hours = _trained_time ~/ 60;
+    int hours = _trainedTime ~/ 60;
     return hours == 1 ? '1 hour' : '$hours hours';
+  }
+
+  void _reorderPlans(int oldIndex, int newIndex) {
+    setState(() {
+      if(oldIndex < newIndex) {
+        newIndex -= 1;
+      }
+      final TrainingPlan plan = _plans.removeAt(oldIndex);
+      _plans.insert(newIndex, plan);
+    });
+  }
+
+  void _removePlan(int index) {
+    setState(() {
+      _plans.removeAt(index);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    //plans = plans.isEmpty ? ModalRoute.of(context)!.settings.arguments as List<TrainingPlan> : plans;
-
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -74,51 +137,53 @@ class _HomePageScreenState extends State<HomePageScreen> {
               ),
             ),
           ),
-          Headline(text_content: 'Your training plans'),
+          Headline(textContent: 'Your training plans'),
           Expanded(
-            child: ListView.builder(
+            child: ReorderableListView.builder(
               scrollDirection: Axis.vertical,
               shrinkWrap: true,
-              itemCount: 100,
+              onReorder: _reorderPlans,
+              itemCount: _plans.length,
               itemBuilder: (context, index) {
                 return Card(
-                  child: ListTileTheme(
-                    child: ListTile(
-                      onTap: () {
-                        print('TAP');
+                  key: ValueKey(index),
+                  child: ListTile(
+                    onTap: () {
+                      print('TAP $index');
+                    },
+                    leading: Icon(Icons.play_arrow),
+                    title: Text(_plans[index].name),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () async {
+                        bool? shouldRemove = await showDialog<bool>(
+                            context: context,
+                            builder: (BuildContext context) => AlertDialog(
+                              title: const Text('Remove Alert'),
+                              content: const Text('Do you want to remove the plan?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context, true);
+                                  },
+                                  child: const Text('Yes'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context, false);
+                                  },
+                                  child: const Text('No'),
+                                ),
+                              ],
+                            )
+                        );
+                        shouldRemove = shouldRemove == null ? false : shouldRemove;
+                        if(shouldRemove) {
+                          _removePlan(index);
+                        }
                       },
-                      leading: Icon(Icons.play_arrow),
-                      title: Text(plans[0].name),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () async {
-                          bool? result = await showDialog<bool>(
-                              context: context,
-                              builder: (BuildContext context) => AlertDialog(
-                                title: const Text('Remove Alert'),
-                                content: const Text('Do you want to remove the plan?'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.pop(context, true);
-                                    },
-                                    child: const Text('Yes'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.pop(context, false);
-                                    },
-                                    child: const Text('No'),
-                                  ),
-                                ],
-                              )
-                          );
-                          result = result == null ? false : result;
-                          print(result);
-                        },
-                      ),
                     ),
-                  )
+                  ),
                 );
               },
             ),
