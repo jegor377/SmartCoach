@@ -1,11 +1,8 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:smart_coach/models/training.dart';
+import 'package:smart_coach/singletons/settings.dart';
+import 'package:smart_coach/singletons/training_plans.dart';
 
 class LoadingTrainingPlanScreen extends StatefulWidget {
   static const routeName = '/loading';
@@ -19,39 +16,14 @@ class LoadingTrainingPlanScreen extends StatefulWidget {
 class _LoadingTrainingPlanScreenState extends State<LoadingTrainingPlanScreen> with TickerProviderStateMixin {
   @override
   void initState() {
-    loadTrainingPlans();
+    loadSettingsAndTrainingPlans();
     super.initState();
   }
 
-  Future<String> get appDir async {
-    Directory directory = await getApplicationDocumentsDirectory();
-    return directory.path;
-  }
-
-  Future<String> get trainingPlansPath async {
-    var dir = await appDir;
-    return '$dir/training_plans.json';
-  }
-
-  void loadTrainingPlans() async {
-    List<TrainingPlan> plans = [];
-    String filePath = await trainingPlansPath;
-    bool fileExists = await File(filePath).exists();
-    if(fileExists) {
-      File file = File(filePath);
-      final contents = await file.readAsString();
-      final contentsPlans = jsonDecode(contents);
-      for(Map plan in contentsPlans['plans']) {
-        plans.add(TrainingPlan.fromJson(plan));
-      }
-    } else {
-      File file = await File(filePath).create();
-      var defaultTrainingPlans = {
-        'plans': [],
-      };
-      file.writeAsString(jsonEncode(defaultTrainingPlans));
+  void loadSettingsAndTrainingPlans() async {
+    if(await TrainingPlans.load() && await Settings.load()) {
+      Navigator.pushReplacementNamed(context, '/home');
     }
-    Navigator.pushReplacementNamed(context, '/home', arguments: plans);
   }
 
   @override

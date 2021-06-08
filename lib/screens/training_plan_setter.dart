@@ -4,38 +4,18 @@ import 'package:smart_coach/models/training.dart';
 import 'package:smart_coach/screens/repeat_days_selector.dart';
 import 'package:smart_coach/screens/training_exercise_setter.dart';
 
-class CreatingTrainingPlanScreen extends StatefulWidget {
+class TrainingPlanSetterScreen extends StatefulWidget {
   static const routeName = '/new_plan';
 
-  const CreatingTrainingPlanScreen({Key? key}) : super(key: key);
+  const TrainingPlanSetterScreen({Key? key}) : super(key: key);
 
   @override
-  _CreatingTrainingPlanScreenState createState() => _CreatingTrainingPlanScreenState();
+  _TrainingPlanSetterScreenState createState() => _TrainingPlanSetterScreenState();
 }
 
-class _CreatingTrainingPlanScreenState extends State<CreatingTrainingPlanScreen> {
+class _TrainingPlanSetterScreenState extends State<TrainingPlanSetterScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final _trainingPlan = TrainingPlan(
-      name: "Normalny plan",
-      repeatsOnFriday: true,
-      repeatsOnWednesday: true,
-      repeatsOnMonday: true,
-      exercises: [
-        TrainingExercise(
-            type: TrainingExerciseType.NORMAL,
-            description: "20 przysiadow"
-        ),
-        TrainingExercise(
-            type: TrainingExerciseType.NORMAL,
-            description: "10 pompek"
-        ),
-        TrainingExercise(
-            type: TrainingExerciseType.TIMED,
-            description: "30s planka",
-            time: 30
-        ),
-      ]
-  );
+  TrainingPlan _trainingPlan = TrainingPlan.empty();
 
   void _setRepeatDays() async {
     RepeatingDaysScreenArguments? result = await Navigator.pushNamed(
@@ -72,12 +52,13 @@ class _CreatingTrainingPlanScreenState extends State<CreatingTrainingPlanScreen>
       Icons.accessibility,
       Icons.timer,
     ];
+
     return ListTile(
       onTap: () async {
         TrainingExercise? changedExercise = await Navigator.pushNamed(
           context,
           TrainingExerciseSetterScreen.routeName,
-          arguments: _trainingPlan.exercises[index]
+          arguments: TrainingExercise.from(_trainingPlan.exercises[index])
         ) as TrainingExercise?;
         if(changedExercise != null) {
           _trainingPlan.exercises[index] = changedExercise;
@@ -97,9 +78,12 @@ class _CreatingTrainingPlanScreenState extends State<CreatingTrainingPlanScreen>
 
   @override
   Widget build(BuildContext context) {
+    TrainingPlan? newTrainingPlan = ModalRoute.of(context)!.settings.arguments as TrainingPlan?;
+    _trainingPlan = newTrainingPlan != null ? newTrainingPlan : _trainingPlan;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Create Training Plan'),
+        title: Text('Configure Training Plan'),
       ),
       body: Container(
         margin: EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 0),
@@ -116,6 +100,8 @@ class _CreatingTrainingPlanScreenState extends State<CreatingTrainingPlanScreen>
                       labelText: "Name",
                       hintText: "Enter training plan's name",
                     ),
+                    initialValue: _trainingPlan.name,
+                    onChanged: (value) => _trainingPlan.name = value,
                     validator: (String? value) {
                       if(value == null || value.isEmpty) {
                         return 'Please enter some name';
@@ -143,6 +129,7 @@ class _CreatingTrainingPlanScreenState extends State<CreatingTrainingPlanScreen>
                   ),
                   ReorderableListView.builder(
                     shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
                     scrollDirection: Axis.vertical,
                     itemCount: _trainingPlan.exercises.length,
                     itemBuilder: (context, index) {
@@ -154,16 +141,51 @@ class _CreatingTrainingPlanScreenState extends State<CreatingTrainingPlanScreen>
                     onReorder: _reorderExercises,
                   ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 20.0, 0, 0),
+                    padding: EdgeInsets.fromLTRB(0, 20.0, 0, 0),
                     child: ElevatedButton(
-                      onPressed: () {
-                        if(_formKey.currentState!.validate()) {
-                          print("VALID");
+                      onPressed: () async {
+                        TrainingExercise? newExercise = await Navigator.of(context).pushNamed(
+                          TrainingExerciseSetterScreen.routeName
+                        ) as TrainingExercise?;
+                        if(newExercise != null) {
+                          setState(() {
+                            _trainingPlan.exercises.add(newExercise);
+                          });
                         }
                       },
-                      child: const Text('Save'),
+                      child: const Icon(Icons.add),
                     ),
-                  )
+                  ),
+                  Divider(),
+                  ElevatedButton(
+                    onPressed: () {
+                      if(_formKey.currentState!.validate()) {
+                        if(_trainingPlan.exercises.isNotEmpty) {
+                          FocusScope.of(context).unfocus();
+                          Navigator.of(context).pop(_trainingPlan);
+                        } else {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text('Not enough exercises!'),
+                                content: const Text('Please create at least one exercise'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: const Text('OK')
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        }
+                      }
+                    },
+                    child: const Text('Save'),
+                  ),
                 ],
               ),
             ),

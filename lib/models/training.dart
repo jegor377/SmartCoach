@@ -20,6 +20,14 @@
 }
 */
 
+import 'dart:math';
+
+
+enum TrainingExerciseType {
+  NORMAL,
+  TIMED,
+}
+
 class TrainingPlan {
   String name = '';
   bool repeatsOnMonday = false;
@@ -58,6 +66,20 @@ class TrainingPlan {
     return result.isEmpty ? 'Never' : result;
   }
 
+  List<int> get repeatingDaysList {
+    List<int> result = [];
+
+    if(repeatsOnMonday) result.add(0);
+    if(repeatsOnTuesday) result.add(1);
+    if(repeatsOnWednesday) result.add(2);
+    if(repeatsOnThursday) result.add(3);
+    if(repeatsOnFriday) result.add(4);
+    if(repeatsOnSaturday) result.add(5);
+    if(repeatsOnSunday) result.add(6);
+
+    return result;
+  }
+
   RepeatingDaysScreenArguments get repeatingDaysScreenArgs => RepeatingDaysScreenArguments(
       repeatsOnMonday: repeatsOnMonday,
       repeatsOnTuesday: repeatsOnTuesday,
@@ -78,9 +100,43 @@ class TrainingPlan {
     repeatsOnSunday = days.repeatsOnSunday;
   }
 
-  factory TrainingPlan.fromJson(Map plan) {
+  List<Map<String, dynamic>> get exercisesJsonList {
+    List<Map<String, dynamic>> result = [];
+
+    for(TrainingExercise exercise in exercises) {
+      result.add(exercise.toJson());
+    }
+
+    return result;
+  }
+
+  factory TrainingPlan.from(TrainingPlan other) {
+    List<TrainingExercise> exercises = [];
+    for(TrainingExercise exercise in other.exercises) {
+      exercises.add(TrainingExercise.from(exercise));
+    }
+    return TrainingPlan(
+        name: other.name,
+        repeatsOnMonday: other.repeatsOnMonday,
+        repeatsOnTuesday: other.repeatsOnTuesday,
+        repeatsOnWednesday: other.repeatsOnWednesday,
+        repeatsOnThursday: other.repeatsOnThursday,
+        repeatsOnFriday: other.repeatsOnFriday,
+        repeatsOnSaturday: other.repeatsOnSaturday,
+        repeatsOnSunday: other.repeatsOnSunday,
+        exercises: exercises
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'repeating_days': repeatingDaysList,
+    'exercises': exercisesJsonList,
+  };
+
+  factory TrainingPlan.fromJson(Map<String, dynamic> plan) {
     TrainingPlan result = TrainingPlan.empty();
-    for(Map exercise in plan['exercises']) {
+    for(Map<String, dynamic> exercise in plan['exercises']) {
       result.exercises.add(TrainingExercise.fromJson(exercise));
     }
     result.name = plan['name'];
@@ -113,6 +169,97 @@ class TrainingPlan {
   }
 }
 
+class TrainingExercise {
+  static const int maxTime = 24 * 3600 + 59 * 60 + 59;
+  TrainingExerciseType type = TrainingExerciseType.NORMAL;
+  String description = '';
+  int _time = 0; // duration in seconds
+
+  TrainingExercise({
+    required this.type,
+    required this.description,
+    int time = 0
+  }) {
+    this.time = time;
+  }
+  TrainingExercise.empty();
+  factory TrainingExercise.from(TrainingExercise other) => TrainingExercise(
+      type: other.type,
+      description: other.description,
+      time: other.time
+  );
+
+  int get time => _time;
+
+  set time(int value) {
+    _time = min(value, maxTime);
+  }
+
+  int get seconds => time % 60;
+  int get minutes => (time % 3600) ~/ 60;
+  int get hours => time ~/ 3600;
+
+  set seconds(int value) {
+    time = hours * 3600 + minutes * 60 + value;
+    time = min(time, maxTime);
+  }
+
+  set minutes(int value) {
+    time = hours * 3600 + value * 60 + seconds;
+    time = min(time, maxTime);
+  }
+
+  set hours(int value) {
+    time = value * 3600 + minutes * 60 + seconds;
+    time = min(time, maxTime);
+  }
+
+  String get timeLabel {
+    String result = '';
+
+    if(time != 0) {
+      if(hours > 0) result += '${hours}h ';
+      if(minutes > 0) result += '${minutes}m ';
+      if(seconds > 0) result += '${seconds}s';
+    } else {
+      result += '${seconds}s';
+    }
+
+    return result;
+  }
+
+  Map<String, dynamic> toJson() {
+    if(type == TrainingExerciseType.TIMED) return {
+      'type': type.index,
+      'description': description,
+      'time': time,
+    };
+    return {
+      'type': type.index,
+      'description': description,
+    };
+  }
+
+  factory TrainingExercise.fromJson(Map<String, dynamic> exercise) {
+    return TrainingExercise(
+        type: TrainingExerciseType.values[exercise['type']],
+        description: exercise['description'],
+        time: exercise.containsKey('time') ? exercise['time'] : 0
+    );
+  }
+}
+
+class TrainingPlanScreenArguments {
+  TrainingPlan plan = TrainingPlan.empty();
+  int index = 0;
+
+  TrainingPlanScreenArguments({
+    required this.plan,
+    required this.index
+  });
+  TrainingPlanScreenArguments.empty();
+}
+
 class RepeatingDaysScreenArguments {
   bool repeatsOnMonday = false;
   bool repeatsOnTuesday = false;
@@ -133,43 +280,4 @@ class RepeatingDaysScreenArguments {
   });
 
   RepeatingDaysScreenArguments.empty();
-}
-
-enum TrainingExerciseType {
-  NORMAL,
-  TIMED,
-}
-
-class TrainingExercise {
-  TrainingExerciseType type = TrainingExerciseType.NORMAL;
-  String description = '';
-  int time = 0;
-
-  TrainingExercise({
-    required this.type,
-    required this.description,
-    this.time = 0
-  });
-  TrainingExercise.empty();
-
-  String get timeLabel {
-    int hours = time ~/ 3600;
-    int minutes = (time % 3600) ~/ 60;
-    int seconds = time % 60;
-    String result = '';
-
-    if(hours > 0) result += '${hours}h ';
-    if(minutes > 0) result += '${minutes}m ';
-    result += '${seconds}s';
-
-    return result;
-  }
-
-  factory TrainingExercise.fromJson(Map exercise) {
-    return TrainingExercise(
-      type: TrainingExerciseType.values[exercise['type']],
-      description: exercise['description'],
-      time: exercise.containsKey('time') ? exercise['time'] : 0
-    );
-  }
 }

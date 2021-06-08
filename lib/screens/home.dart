@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:smart_coach/models/training.dart';
-import 'package:smart_coach/screens/creating_training_plan.dart';
+import 'package:smart_coach/screens/contact.dart';
+import 'package:smart_coach/screens/training_plan_info.dart';
+import 'package:smart_coach/screens/training_plan_setter.dart';
+import 'package:smart_coach/singletons/settings.dart';
+import 'package:smart_coach/singletons/training_plans.dart';
 import 'package:smart_coach/widgets/headline.dart';
 
 class HomePageScreen extends StatefulWidget {
@@ -15,98 +19,35 @@ class HomePageScreen extends StatefulWidget {
 }
 
 class _HomePageScreenState extends State<HomePageScreen> {
-  int _trainedTime = 65;
-  List<TrainingPlan> _plans = [
-    TrainingPlan(
-        name: "Normalny plan",
-        repeatsOnFriday: true,
-        repeatsOnWednesday: true,
-        repeatsOnMonday: true,
-        exercises: [
-          TrainingExercise(
-            type: TrainingExerciseType.NORMAL,
-            description: "20 przysiadow"
-          ),
-          TrainingExercise(
-            type: TrainingExerciseType.NORMAL,
-            description: "10 pompek"
-          ),
-          TrainingExercise(
-            type: TrainingExerciseType.TIMED,
-            description: "30s planka",
-            time: 30
-          ),
-        ]
-    ),
-    TrainingPlan(
-        name: "Lol plan",
-        repeatsOnFriday: true,
-        repeatsOnWednesday: true,
-        repeatsOnMonday: true,
-        exercises: [
-          TrainingExercise(
-              type: TrainingExerciseType.NORMAL,
-              description: "20 przysiadow"
-          ),
-          TrainingExercise(
-              type: TrainingExerciseType.NORMAL,
-              description: "10 pompek"
-          ),
-          TrainingExercise(
-              type: TrainingExerciseType.TIMED,
-              description: "30s planka",
-              time: 30
-          ),
-        ]
-    ),
-    TrainingPlan(
-        name: "Nienormalny plan",
-        repeatsOnFriday: true,
-        repeatsOnWednesday: true,
-        repeatsOnMonday: true,
-        exercises: [
-          TrainingExercise(
-              type: TrainingExerciseType.NORMAL,
-              description: "20 przysiadow"
-          ),
-          TrainingExercise(
-              type: TrainingExerciseType.NORMAL,
-              description: "10 pompek"
-          ),
-          TrainingExercise(
-              type: TrainingExerciseType.TIMED,
-              description: "30s planka",
-              time: 30
-          ),
-        ]
-    )
-  ];
-
-  void _newTrainingPlan() {
-    Navigator.pushNamed(
-      context,
-      CreatingTrainingPlanScreen.routeName,
-    );
+  String _getTimeSpentWorkingLabel() {
+    int hours = Settings.timeSpentWorking ~/ 3600;
+    return hours == 1 ? '1 hour' : '$hours hours';
   }
 
-  String _getTimeSpentWorkingLabel() {
-    int hours = _trainedTime ~/ 60;
-    return hours == 1 ? '1 hour' : '$hours hours';
+  void _newTrainingPlan() async {
+    TrainingPlan? _newTrainingPlan = await Navigator.pushNamed(
+      context,
+      TrainingPlanSetterScreen.routeName,
+    ) as TrainingPlan?;
+    if(_newTrainingPlan != null) {
+      setState(() {
+        TrainingPlans.plans.add(_newTrainingPlan);
+        TrainingPlans.save();
+      });
+    }
   }
 
   void _reorderPlans(int oldIndex, int newIndex) {
     setState(() {
-      if(oldIndex < newIndex) {
-        newIndex -= 1;
-      }
-      final TrainingPlan plan = _plans.removeAt(oldIndex);
-      _plans.insert(newIndex, plan);
+      TrainingPlans.reorderPlans(oldIndex, newIndex);
+      TrainingPlans.save();
     });
   }
 
   void _removePlan(int index) {
     setState(() {
-      _plans.removeAt(index);
+      TrainingPlans.plans.removeAt(index);
+      TrainingPlans.save();
     });
   }
 
@@ -117,6 +58,31 @@ class _HomePageScreenState extends State<HomePageScreen> {
         centerTitle: true,
         title: Text(widget.title),
       ),
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue
+              ),
+              child: Text(widget.title),
+            ),
+            ListTile(
+              title: const Text('Contact'),
+              onTap: () {
+                Navigator.of(context).pushNamed(ContactScreen.routeName);
+              },
+            ),
+            ListTile(
+              title: const Text('Settings'),
+              onTap: () {
+                print('Settings');
+              },
+            )
+          ],
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,16 +109,22 @@ class _HomePageScreenState extends State<HomePageScreen> {
               scrollDirection: Axis.vertical,
               shrinkWrap: true,
               onReorder: _reorderPlans,
-              itemCount: _plans.length,
+              itemCount: TrainingPlans.plans.length,
               itemBuilder: (context, index) {
                 return Card(
                   key: ValueKey(index),
                   child: ListTile(
-                    onTap: () {
-                      print('TAP $index');
+                    onTap: () async {
+                      Navigator.of(context).pushNamed(
+                        TrainingPlanInfoScreen.routeName,
+                        arguments: TrainingPlanScreenArguments(
+                            plan: TrainingPlan.from(TrainingPlans.plans[index]),
+                            index: index
+                        ),
+                      ).then((_) => setState((){}));
                     },
                     leading: Icon(Icons.play_arrow),
-                    title: Text(_plans[index].name),
+                    title: Text(TrainingPlans.plans[index].name),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete),
                       onPressed: () async {
