@@ -36,7 +36,7 @@ class _LoadingTrainingPlanScreenState extends State<LoadingTrainingPlanScreen> w
       height: double.infinity,
       child: Center(
         child: SpinKitFadingCube(
-          color: Colors.white,
+          color: Theme.of(context).textTheme.bodyText2!.color,
           size: 50.0,
           controller: AnimationController(vsync: this, duration: const Duration(milliseconds: 1200)),
         ),

@@ -32,7 +32,7 @@ class TrainingPlans {
       File file = File(filePath);
       final contents = await file.readAsString();
       final contentsPlans = jsonDecode(contents);
-      for(Map<String, dynamic> plan in contentsPlans['plans'][0]) {
+      for(Map<String, dynamic> plan in contentsPlans['plans']) {
         _tPlans.add(TrainingPlan.fromJson(plan));
       }
       _instance._plans = _tPlans;
@@ -56,7 +56,7 @@ class TrainingPlans {
         plansToSave.add(plan.toJson());
       }
       file.writeAsString(jsonEncode({
-        'plans': [plansToSave],
+        'plans': plansToSave,
       }), mode: FileMode.write);
     }
   }

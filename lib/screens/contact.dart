@@ -64,15 +64,18 @@ class ContactScreen extends StatelessWidget {
           children: [
             Padding(
               padding: EdgeInsets.symmetric(vertical: 20.0),
-              child: Center(
-                child: CircleAvatar(
-                  backgroundColor: Colors.black,
-                  child: Icon(
-                    Icons.person,
-                    color: Colors.yellow,
-                    size: 40.0,
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [BoxShadow(blurRadius: 10, color: Colors.grey.shade900, spreadRadius: 5)],
+                ),
+                child: Center(
+                  child: CircleAvatar(
+                    backgroundImage: AssetImage('assets/avatar.png'),
+                    radius: 60.0,
                   ),
-                  radius: 40.0,
                 ),
               )
             ),

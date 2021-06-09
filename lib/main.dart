@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:smart_coach/screens/contact.dart';
+import 'package:smart_coach/screens/settings.dart';
 import 'package:smart_coach/screens/training.dart';
 import 'package:smart_coach/screens/training_plan_info.dart';
 import 'package:smart_coach/screens/training_plan_setter.dart';
@@ -9,6 +13,11 @@ import 'package:smart_coach/screens/repeat_days_selector.dart';
 import 'package:smart_coach/screens/training_exercise_setter.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  if(Platform.isAndroid) {
+    final platform = MethodChannel("com.igor.dev");
+    await platform.invokeMethod("printELO");
+  }
   runApp(MyApp());
 }
 
@@ -29,6 +38,7 @@ class MyApp extends StatelessWidget {
         TrainingPlanInfoScreen.routeName: (context) => TrainingPlanInfoScreen(),
         TrainingScreen.routeName: (context) => TrainingScreen(),
         ContactScreen.routeName: (context) => ContactScreen(),
+        SettingsScreen.routeName: (context) => SettingsScreen(),
       },
     );
   }

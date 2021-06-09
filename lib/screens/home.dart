@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smart_coach/models/training.dart';
 import 'package:smart_coach/screens/contact.dart';
+import 'package:smart_coach/screens/settings.dart';
 import 'package:smart_coach/screens/training_plan_info.dart';
 import 'package:smart_coach/screens/training_plan_setter.dart';
 import 'package:smart_coach/singletons/settings.dart';
@@ -76,7 +77,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
             ListTile(
               title: const Text('Settings'),
               onTap: () {
-                print('Settings');
+                Navigator.of(context).pushNamed(SettingsScreen.routeName);
               },
             )
           ],
