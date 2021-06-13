@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:smart_coach/models/training.dart';
+import 'package:smart_coach/models/repeating_days.dart';
 
 class RepeatDaysSelectorScreen extends StatefulWidget {
   static const String routeName = '/repeat_days_selector';
@@ -11,11 +11,11 @@ class RepeatDaysSelectorScreen extends StatefulWidget {
 }
 
 class _RepeatDaysSelectorScreenState extends State<RepeatDaysSelectorScreen> {
-  RepeatingDaysScreenArguments _repeatingDays = RepeatingDaysScreenArguments.empty();
+  TrainingRepeatingDays _repeatingDays = TrainingRepeatingDays();
 
   @override
   Widget build(BuildContext context) {
-    RepeatingDaysScreenArguments? newRepeatingDays = ModalRoute.of(context)!.settings.arguments as RepeatingDaysScreenArguments?;
+    TrainingRepeatingDays? newRepeatingDays = ModalRoute.of(context)!.settings.arguments as TrainingRepeatingDays?;
     _repeatingDays = newRepeatingDays != null ? newRepeatingDays : _repeatingDays;
 
     return Scaffold(

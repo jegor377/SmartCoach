@@ -1,11 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:smart_coach/models/training.dart';
+import 'package:smart_coach/db/training_plans_db.dart';
+import 'package:smart_coach/models/exercise.dart';
+import 'package:smart_coach/models/plan.dart';
 import 'package:smart_coach/screens/training.dart';
 import 'package:smart_coach/screens/training_plan_setter.dart';
 import 'package:smart_coach/singletons/settings.dart';
-import 'package:smart_coach/singletons/training_plans.dart';
 
 class TrainingPlanInfoScreen extends StatefulWidget {
   static const String routeName = '/training_plan_info';
@@ -17,7 +18,7 @@ class TrainingPlanInfoScreen extends StatefulWidget {
 }
 
 class _TrainingPlanInfoScreenState extends State<TrainingPlanInfoScreen> {
-  TrainingPlanScreenArguments _planArgs = TrainingPlanScreenArguments.empty();
+  TrainingPlan _plan = TrainingPlan.empty();
 
   Timer _startTimer() => Timer.periodic(Duration(seconds: 1), (timer) {
     Settings.timeSpentWorking++;
@@ -34,21 +35,20 @@ class _TrainingPlanInfoScreenState extends State<TrainingPlanInfoScreen> {
   );
   
   Widget? exerciseSubtitle(TrainingExercise exercise) {
-    if(exercise.type == TrainingExerciseType.TIMED) return Text('Duration time: ${exercise.timeLabel}');
+    if(exercise.type == TrainingExerciseType.timed) return Text('Duration time: ${exercise.timeLabel}');
     return null;
   }
 
   Widget exerciseListTile(TrainingExercise exercise) => ListTile(
-    leading: Icon(exercise.type == TrainingExerciseType.TIMED ? Icons.timer : Icons.accessibility),
+    leading: Icon(exercise.type == TrainingExerciseType.timed ? Icons.timer : Icons.accessibility),
     title: Text(exercise.description),
     subtitle: exerciseSubtitle(exercise),
   );
 
   @override
   Widget build(BuildContext context) {
-    TrainingPlanScreenArguments? passedTrainingPlan = ModalRoute.of(context)!.settings.arguments as TrainingPlanScreenArguments?;
-    _planArgs = passedTrainingPlan != null ? passedTrainingPlan : _planArgs;
-    TrainingPlan plan = _planArgs.plan;
+    TrainingPlan? plan = ModalRoute.of(context)!.settings.arguments as TrainingPlan?;
+    _plan = plan != null ? plan : _plan;
 
     return Scaffold(
       appBar: AppBar(
@@ -79,8 +79,7 @@ class _TrainingPlanInfoScreenState extends State<TrainingPlanInfoScreen> {
               );
               shouldRemove = shouldRemove == null ? false : shouldRemove;
               if(shouldRemove) {
-                TrainingPlans.plans.removeAt(_planArgs.index);
-                TrainingPlans.save();
+                TrainingPlansDB.deletePlan(_plan.id);
                 Navigator.of(context).pop();
               }
             },
@@ -90,13 +89,13 @@ class _TrainingPlanInfoScreenState extends State<TrainingPlanInfoScreen> {
             onPressed: () async {
               TrainingPlan? changedTrainingPlan = await Navigator.of(context).pushNamed(
                 TrainingPlanSetterScreen.routeName,
-                arguments: TrainingPlan.from(plan),
+                arguments: _plan, // previous copy of
               ) as TrainingPlan?;
               if(changedTrainingPlan != null) setState(() {
-                _planArgs.plan = changedTrainingPlan;
-                TrainingPlans.plans[_planArgs.index] = _planArgs.plan;
+                _plan = changedTrainingPlan;
+                TrainingPlansDB.updatePlan(changedTrainingPlan);
               });
-              TrainingPlans.save();
+              //TrainingPlans.save();
             },
             icon: const Icon(Icons.edit),
           ),
@@ -109,12 +108,7 @@ class _TrainingPlanInfoScreenState extends State<TrainingPlanInfoScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Name'),
-            informationWidget(plan.name),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(0, 20.0, 0, 0),
-              child: const Text('Repeating days'),
-            ),
-            informationWidget(plan.repeatingDays),
+            informationWidget(_plan.name),
             const Padding(
               padding: EdgeInsets.fromLTRB(0, 20.0, 0, 10.0),
               child: const Text('Exercises'),
@@ -123,10 +117,10 @@ class _TrainingPlanInfoScreenState extends State<TrainingPlanInfoScreen> {
               child: ListView.builder(
                   shrinkWrap: true,
                   scrollDirection: Axis.vertical,
-                  itemCount: plan.exercises.length,
+                  itemCount: _plan.exercises.length,
                   itemBuilder: (context, index) {
                     return Card(
-                      child: exerciseListTile(plan.exercises[index]),
+                      child: exerciseListTile(_plan.exercises[index]),
                     );
                   }
               ),
@@ -142,7 +136,7 @@ class _TrainingPlanInfoScreenState extends State<TrainingPlanInfoScreen> {
                       Timer timer = _startTimer();
                       await Navigator.of(context).pushNamed(
                         TrainingScreen.routeName,
-                        arguments: _planArgs.plan
+                        arguments: _plan,
                       );
                       timer.cancel();
                       Settings.save();

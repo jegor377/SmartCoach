@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:smart_coach/models/training.dart';
-import 'package:smart_coach/screens/repeat_days_selector.dart';
+import 'package:smart_coach/models/exercise.dart';
+import 'package:smart_coach/models/plan.dart';
 import 'package:smart_coach/screens/training_exercise_setter.dart';
 
 class TrainingPlanSetterScreen extends StatefulWidget {
@@ -17,19 +17,6 @@ class _TrainingPlanSetterScreenState extends State<TrainingPlanSetterScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   TrainingPlan _trainingPlan = TrainingPlan.empty();
 
-  void _setRepeatDays() async {
-    RepeatingDaysScreenArguments? result = await Navigator.pushNamed(
-      context,
-      RepeatDaysSelectorScreen.routeName,
-      arguments: _trainingPlan.repeatingDaysScreenArgs,
-    ) as RepeatingDaysScreenArguments?;
-    setState(() {
-      if(result != null && !identical(result, _trainingPlan.repeatingDaysScreenArgs)) {
-        _trainingPlan.repeatingDaysScreenArgs = result;
-      }
-    });
-  }
-
   void _reorderExercises(int oldIndex, int newIndex) {
     setState(() {
       if(oldIndex < newIndex) {
@@ -40,6 +27,13 @@ class _TrainingPlanSetterScreenState extends State<TrainingPlanSetterScreen> {
     });
   }
 
+  void _copyExercise(int index) {
+    setState(() {
+      TrainingExercise exercise = TrainingExercise.from(_trainingPlan.exercises[index]);
+      _trainingPlan.exercises.add(exercise);
+    });
+  }
+  
   void _removeExercise(int index) {
     setState(() {
       _trainingPlan.exercises.removeAt(index);
@@ -68,10 +62,18 @@ class _TrainingPlanSetterScreenState extends State<TrainingPlanSetterScreen> {
         exerciseTypeIcons[exercise.type.index],
       ),
       title: Text(_trainingPlan.exercises[index].description),
-      subtitle: exercise.type == TrainingExerciseType.TIMED ? Text("Duration time: ${exercise.timeLabel}") : null,
-      trailing: IconButton(
-        icon: Icon(Icons.delete),
-        onPressed: () => _removeExercise(index),
+      subtitle: exercise.type == TrainingExerciseType.timed ? Text("Duration time: ${exercise.timeLabel}") : null,
+      trailing: Wrap(
+        children: [
+          IconButton(
+            icon: Icon(Icons.copy),
+            onPressed: () => _copyExercise(index),
+          ),
+          IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: () => _removeExercise(index),
+          )
+        ],
       ),
     );
   }
@@ -108,20 +110,6 @@ class _TrainingPlanSetterScreenState extends State<TrainingPlanSetterScreen> {
                       }
                       return null;
                     },
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(0, 10.0, 0, 5.0),
-                    child: const Text('Repeat days'),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(_trainingPlan.repeatingDays),
-                      IconButton(
-                        onPressed: _setRepeatDays,
-                        icon: Icon(Icons.edit),
-                      ),
-                    ],
                   ),
                   Padding(
                     padding: EdgeInsets.fromLTRB(0, 10.0, 0, 5.0),

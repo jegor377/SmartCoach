@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:smart_coach/models/training.dart';
+import 'package:smart_coach/db/training_plans_db.dart';
+import 'package:smart_coach/models/plan.dart';
 import 'package:smart_coach/screens/contact.dart';
 import 'package:smart_coach/screens/settings.dart';
 import 'package:smart_coach/screens/training_plan_info.dart';
 import 'package:smart_coach/screens/training_plan_setter.dart';
 import 'package:smart_coach/singletons/settings.dart';
-import 'package:smart_coach/singletons/training_plans.dart';
 import 'package:smart_coach/widgets/headline.dart';
 
 class HomePageScreen extends StatefulWidget {
@@ -25,31 +25,25 @@ class _HomePageScreenState extends State<HomePageScreen> {
     return hours == 1 ? '1 hour' : '$hours hours';
   }
 
-  void _newTrainingPlan() async {
+  Future _newTrainingPlan() async {
     TrainingPlan? _newTrainingPlan = await Navigator.pushNamed(
       context,
       TrainingPlanSetterScreen.routeName,
     ) as TrainingPlan?;
     if(_newTrainingPlan != null) {
-      setState(() {
-        TrainingPlans.plans.add(_newTrainingPlan);
-        TrainingPlans.save();
-      });
+      await TrainingPlansDB.createPlan(_newTrainingPlan);
+      setState(() {});
     }
   }
 
-  void _reorderPlans(int oldIndex, int newIndex) {
-    setState(() {
-      TrainingPlans.reorderPlans(oldIndex, newIndex);
-      TrainingPlans.save();
-    });
+  Future _reorderPlans(int oldIndex, int newIndex) async {
+    await TrainingPlansDB.reorderPlans(oldIndex, newIndex);
+    setState(() {});
   }
 
-  void _removePlan(int index) {
-    setState(() {
-      TrainingPlans.plans.removeAt(index);
-      TrainingPlans.save();
-    });
+  Future _removePlan(int id) async {
+    await TrainingPlansDB.deletePlan(id);
+    setState(() {});
   }
 
   @override
@@ -57,16 +51,16 @@ class _HomePageScreenState extends State<HomePageScreen> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: Text(widget.title),
+        title: Text("SmartCoach"),
       ),
       drawer: Drawer(
         child: ListView(
           children: [
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.blue
+                  color: Colors.blue
               ),
-              child: Text(widget.title),
+              child: Text('SmartCoach'),
             ),
             ListTile(
               title: const Text('Contact'),
@@ -98,7 +92,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   padding: EdgeInsets.symmetric(vertical: 15.0),
                   child: Center(
                     child: Text(
-                      'You have ${_getTimeSpentWorkingLabel()} spent training!'
+                        'You have ${_getTimeSpentWorkingLabel()} spent training!'
                     ),
                   )
               ),
@@ -110,22 +104,20 @@ class _HomePageScreenState extends State<HomePageScreen> {
               scrollDirection: Axis.vertical,
               shrinkWrap: true,
               onReorder: _reorderPlans,
-              itemCount: TrainingPlans.plans.length,
+              itemCount: TrainingPlansDB.plans.length,
               itemBuilder: (context, index) {
                 return Card(
                   key: ValueKey(index),
                   child: ListTile(
                     onTap: () async {
-                      Navigator.of(context).pushNamed(
+                      await Navigator.of(context).pushNamed(
                         TrainingPlanInfoScreen.routeName,
-                        arguments: TrainingPlanScreenArguments(
-                            plan: TrainingPlan.from(TrainingPlans.plans[index]),
-                            index: index
-                        ),
-                      ).then((_) => setState((){}));
+                        arguments: TrainingPlan.from(TrainingPlansDB.plans[index]),
+                      );
+                      setState(() {});
                     },
                     leading: Icon(Icons.play_arrow),
-                    title: Text(TrainingPlans.plans[index].name),
+                    title: Text(TrainingPlansDB.plans[index].name),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete),
                       onPressed: () async {
@@ -152,7 +144,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
                         );
                         shouldRemove = shouldRemove == null ? false : shouldRemove;
                         if(shouldRemove) {
-                          _removePlan(index);
+                          _removePlan(TrainingPlansDB.plans[index].id);
                         }
                       },
                     ),

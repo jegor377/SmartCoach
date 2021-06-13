@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:smart_coach/db/training_plans_db.dart';
 import 'package:smart_coach/singletons/settings.dart';
-import 'package:smart_coach/singletons/training_plans.dart';
 
 class LoadingTrainingPlanScreen extends StatefulWidget {
   static const routeName = '/loading';
@@ -21,9 +21,9 @@ class _LoadingTrainingPlanScreenState extends State<LoadingTrainingPlanScreen> w
   }
 
   void loadSettingsAndTrainingPlans() async {
-    if(await TrainingPlans.load() && await Settings.load()) {
-      Navigator.pushReplacementNamed(context, '/home');
-    }
+    await Settings.load();
+    await TrainingPlansDB.init();
+    await Navigator.pushReplacementNamed(context, '/home');
   }
 
   @override

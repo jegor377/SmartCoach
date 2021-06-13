@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
-import 'package:smart_coach/models/training.dart';
+import 'package:smart_coach/models/exercise.dart';
 
 class TrainingExerciseSetterScreen extends StatefulWidget {
   static const String routeName = "/training_exercise_setter";
@@ -15,8 +15,8 @@ class _TrainingExerciseSetterScreenState extends State<TrainingExerciseSetterScr
   final _formKey = GlobalKey<FormState>();
   TrainingExercise _exercise = TrainingExercise.empty();
   Map<TrainingExerciseType, String> _exerciseTypeNames = {
-    TrainingExerciseType.NORMAL: 'Normal',
-    TrainingExerciseType.TIMED: 'Timed',
+    TrainingExerciseType.normal: 'Normal',
+    TrainingExerciseType.timed: 'Timed',
   };
 
   List<DropdownMenuItem<TrainingExerciseType>> _dropdownItems() {
@@ -110,10 +110,10 @@ class _TrainingExerciseSetterScreenState extends State<TrainingExerciseSetterScr
                   ),
                   DropdownButton<TrainingExerciseType>(
                       value: _exercise.type,
-                      onChanged: (TrainingExerciseType? type) {
+                      onChanged: (TrainingExerciseType? _type) {
                         setState(() {
-                          if(type != null) {
-                            _exercise.type = type;
+                          if(_type != null) {
+                            _exercise.type = _type;
                           }
                         });
                       },
@@ -132,18 +132,38 @@ class _TrainingExerciseSetterScreenState extends State<TrainingExerciseSetterScr
                       }
                     },
                   ),
-                  if(_exercise.type == TrainingExerciseType.TIMED)
+                  if(_exercise.type == TrainingExerciseType.timed)
                     Padding(
                       padding: EdgeInsets.fromLTRB(0, 20.0, 0, 15.0),
                       child: const Text('Choose duration time'),
                     ),
-                  if(_exercise.type == TrainingExerciseType.TIMED)
+                  if(_exercise.type == TrainingExerciseType.timed)
                     _durationTimeTimer(),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 20.0, 0, 0),
                     child: ElevatedButton(
                       onPressed: () {
                         if(_formKey.currentState!.validate()) {
+                          if(_exercise.type == TrainingExerciseType.timed && _exercise.time == 0) {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Wrong exercise time!'),
+                                  content: const Text('Please specify non zero exercise time'),
+                                  actions: [
+                                    TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: const Text('OK')
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                            return;
+                          }
                           FocusScope.of(context).unfocus();
                           Navigator.of(context).pop(_exercise);
                         }

@@ -1,6 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:smart_coach/models/repeating_days.dart';
+import 'package:smart_coach/screens/repeat_days_selector.dart';
 import 'package:smart_coach/singletons/settings.dart';
+import 'package:smart_coach/singletons/native_api.dart';
 
 class SettingsScreen extends StatefulWidget {
   static const String routeName = '/settings';
@@ -12,6 +15,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+
   Widget buildTitle(String text, {bool isFirst = false}) => Padding(
     padding: EdgeInsets.fromLTRB(0, 15.0, 0, 5.0),
     child: Text(
@@ -45,21 +49,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            SwitchListTile(
+              title: const Text('Training notifications'),
+              value: Settings.shouldNotify,
+              contentPadding: EdgeInsets.all(0),
+              onChanged: (bool value) async {
+                setState(() {
+                  Settings.shouldNotify = value;
+                });
+                await Settings.save();
+                await Settings.resetNotificationService();
+              }
+            ),
             buildTitle('Training notification time'),
             buildEditableInformation(
-              'Everyday at ${Settings.notificationTimeLabel}',
+              'Shows at ${Settings.notificationTime}',
               () async {
                 TimeOfDay? time = await showTimePicker(
                     context: context,
-                    initialTime: Settings.notificationTime,
+                    initialTime: Settings.notificationTime.toTimeOfDay(),
                 );
                 if(time != null) {
                   setState(() {
-                    Settings.notificationTime = time;
-                    Settings.save();
+                    Settings.notificationTime = NotifyTime.fromTimeOfDay(time);
                   });
+                  await Settings.save();
+                  await Settings.resetNotificationService();
                 }
               }
+            ),
+            buildTitle('Training notify days'),
+            buildEditableInformation(
+              Settings.repeatingDays.toString(), () async {
+                TrainingRepeatingDays? repeatingDays = await Navigator.of(context).pushNamed(
+                  RepeatDaysSelectorScreen.routeName,
+                  arguments: Settings.repeatingDays,
+                ) as TrainingRepeatingDays?;
+                if(repeatingDays != null) {
+                  setState(() {
+                    Settings.repeatingDays = repeatingDays;
+                  });
+                  await Settings.save();
+                  await Settings.resetNotificationService();
+                }
+              },
             ),
           ],
         ),

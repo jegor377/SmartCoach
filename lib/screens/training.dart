@@ -2,8 +2,9 @@ import 'dart:math';
 
 import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:smart_coach/models/training.dart';
+import 'package:smart_coach/models/exercise.dart';
+import 'package:smart_coach/models/plan.dart';
+import 'package:smart_coach/singletons/native_api.dart';
 
 class TrainingScreen extends StatefulWidget {
   static const String routeName = '/training';
@@ -15,7 +16,6 @@ class TrainingScreen extends StatefulWidget {
 }
 
 class _TrainingScreenState extends State<TrainingScreen> {
-  final audioPlayer = AudioPlayer();
   TrainingPlan _plan = TrainingPlan.empty();
   final _pageController = PageController(
     initialPage: 0,
@@ -38,7 +38,6 @@ class _TrainingScreenState extends State<TrainingScreen> {
       width: timerRatioSize,
       height: timerRatioSize,
       duration: exercise.time,
-      //fillColor: Colors.green,
       fillColor: Colors.lightGreen,
       backgroundColor: Colors.grey.shade900,
       ringColor: Colors.green.shade900,
@@ -51,7 +50,7 @@ class _TrainingScreenState extends State<TrainingScreen> {
       isReverse: true,
       strokeCap: StrokeCap.round,
       onComplete: () async {
-        audioPlayer.setAsset('assets/plop.mp3').then((value) => audioPlayer.play());
+        NativeAPI.playSound('assets/plop.mp3');
       },
     ),
   );
@@ -83,7 +82,7 @@ class _TrainingScreenState extends State<TrainingScreen> {
         children: [
           buildExerciseNumberWidget(index + 1),
           Expanded(
-            child: exercise.type == TrainingExerciseType.NORMAL ? ListView(
+            child: exercise.type == TrainingExerciseType.normal ? ListView(
               children: [
                 buildExerciseDescription(exercise),
               ],
