@@ -1,6 +1,6 @@
 # SmartCoach
 
-App made in Flutter that helps you plan your training routines. It notifies you in specified days to do workout.
+App made in Flutter that helps you plan your training routines. It notifies you in specified days to do workout. Made in around one week.
 
 ## Screenshots
 
