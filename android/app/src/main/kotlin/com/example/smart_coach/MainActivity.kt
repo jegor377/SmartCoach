@@ -58,7 +58,7 @@ class MainActivity: FlutterActivity() {
         }
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channelName: String = "com.smart_coach.notifications"
-            val channel = NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_HIGH).apply {
+            val channel = NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_DEFAULT).apply {
                 description = "Training routine notifier"
             }
             val notificationManager: NotificationManager =
