@@ -13,5 +13,10 @@ App made in Flutter that helps you plan your training routines. It notifies you 
   <img src="screenshots/6.png" width="250px"/>
 </p>
 
+## Problems
+
+Notifications doesn't work on iOS unfortunately.
+
 ## License
+
 License MIT
