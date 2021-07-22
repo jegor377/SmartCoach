@@ -15,7 +15,7 @@ App made in Flutter that helps you plan your training routines. It notifies you 
 
 ## Problems
 
-Notifications doesn't work on iOS unfortunately.
+Notifications don't work on iOS unfortunately.
 
 ## License
 
